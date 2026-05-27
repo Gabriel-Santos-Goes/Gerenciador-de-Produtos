@@ -1,24 +1,146 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="./Styles/Paginas/MainPage.css">
+    <title>Gerenciador de Produtos - Teste Back-End</title>
+    <style>
+        /* Estilo ultra básico apenas para organização visual */
+        body { font-family: Arial, sans-serif; margin: 30px; background-color: #f4f4f9; color: #333; }
+        max-width { max-width: 800px; margin: auto; }
+        form { background: #fff; padding: 20px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        button { background: #007BFF; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        table { width: 100%; border-collapse: collapse; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #222; color: white; }
+        .btn-delete { background: #DC3545; }
+        .btn-delete:hover { background: #bd2130; }
+    </style>
 </head>
 <body>
-    <header>
-        <nav></nav>
-        <h1>Teste</h1>
-        <ul>
-            <li><a href="./Pages/Exemple.html">hello</a></li>
-            <li><a href="">world</a></li>
-            <li><a href="">again</a></li>
-        </ul>
-    </header>
-    <main></main>
-    <footer></footer>
 
-    <script src="./configs/index.js"></script>
+    <div style="max-width: 800px; margin: auto;">
+        <h2>📦 Cadastro de Produtos (Ambiente de Teste)</h2>
+        
+        <form id="productForm">
+            <div class="form-group">
+                <label for="nome">Nome do Produto:</label>
+                <input type="text" id="nome" required placeholder="Ex: Teclado Mecânico">
+            </div>
+            <div class="form-group">
+                <label for="preco">Preço (R$):</label>
+                <input type="number" id="preco" step="0.01" required placeholder="Ex: 199.90">
+            </div>
+            <div class="form-group">
+                <label for="quantidade">Quantidade em Estoque:</label>
+                <input type="number" id="quantidade" required placeholder="Ex: 15">
+            </div>
+            <button type="submit">Cadastrar Produto</button>
+        </form>
+
+        <h2>📋 Produtos Cadastrados</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Preço</th>
+                    <th>Qtd</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="productTableBody">
+                <tr>
+                    <td colspan="5" style="text-align: center; color: #777;">Nenhum produto carregado. Se conecte ao Back-End.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/produtos'; // URL padrão do seu futuro servidor Node.js
+
+        // 1. FUNÇÃO PARA BUSCAR PRODUTOS DO BACK-END E MOSTRAR NA TELA
+        async function carregarProdutos() {
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('Erro ao buscar dados');
+                
+                const produtos = await response.json();
+                const tbody = document.getElementById('productTableBody');
+                tbody.innerHTML = ''; // Limpa a tabela
+
+                if(produtos.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">Nenhum produto cadastrado no banco.</td></tr>`;
+                    return;
+                }
+
+                produtos.forEach(produto => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${produto.id}</td>
+                        <td>${produto.nome}</td>
+                        <td>R$ ${Number(produto.preco).toFixed(2)}</td>
+                        <td>${produto.quantidade}</td>
+                        <td>
+                            <button class="btn-delete" onclick="deletarProduto('${produto.id}')">Excluir</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Erro ao conectar com o Back-End:', error);
+            }
+        }
+
+        // 2. FUNÇÃO PARA ENVIAR UM NOVO PRODUTO PARA O BACK-END
+        document.getElementById('productForm').addEventListener('submit', async (e) => {
+            e.preventDefault(); // Impede a página de recarregar
+
+            const novoProduto = {
+                nome: document.getElementById('nome').value,
+                preco: parseFloat(document.getElementById('preco').value),
+                quantidade: parseInt(document.getElementById('quantidade').value)
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(novoProduto)
+                });
+
+                if (response.ok) {
+                    document.getElementById('productForm').reset(); // Limpa o formulário
+                    carregarProdutos(); // Atualiza a tabela com o novo produto
+                }
+            } catch (error) {
+                alert('Erro ao salvar produto. O servidor está rodando?');
+            }
+        });
+
+        // 3. FUNÇÃO PARA DELETAR UM PRODUTO
+        async function deletarProduto(id) {
+            if (confirm('Deseja realmente excluir este produto?')) {
+                try {
+                    const response = await fetch(`${API_URL}/${id}`, {
+                        method: 'DELETE'
+                    });
+                    if (response.ok) {
+                        carregarProdutos(); // Atualiza a tabela
+                    }
+                } catch (error) {
+                    alert('Erro ao deletar produto.');
+                }
+            }
+        }
+
+        // Carrega os produtos assim que a página abre
+        carregarProdutos();
+    </script>
 </body>
 </html>

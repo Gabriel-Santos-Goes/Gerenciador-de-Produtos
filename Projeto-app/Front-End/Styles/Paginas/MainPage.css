@@ -5,6 +5,9 @@
 
 header{
     background-color: aquamarine;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
 }
 
 h1{
@@ -13,4 +16,7 @@ h1{
 
 ul{
     background-color: red;
+    display: flex;
+    padding: 1%;
+    margin: 10px;
 }
