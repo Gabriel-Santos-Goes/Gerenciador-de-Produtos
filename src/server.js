@@ -13,7 +13,7 @@ app.use(cors());
 // Lista temporária em memória para simular a base de dados
 let produtos = [
     { id: 1, nome: 'Teclado Mecânico', preco: 250.00, quantidade: 15 },
-    { id: 2, nome: 'Rato Gamer', preco: 120.00, quantidade: 30 },
+    { id: 2, nome: 'Mouse Gamer', preco: 120.00, quantidade: 30 },
     { id: 3, nome: 'Monitor 24"', preco: 850.00, quantidade: 7 }
 ];
 
