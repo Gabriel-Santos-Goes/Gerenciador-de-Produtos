@@ -10,7 +10,14 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(cors());
 
-// Rota de teste
+// Lista temporária em memória para simular a base de dados
+let produtos = [
+    { id: 1, nome: 'Teclado Mecânico', preco: 250.00, quantidade: 15 },
+    { id: 2, nome: 'Rato Gamer', preco: 120.00, quantidade: 30 },
+    { id: 3, nome: 'Monitor 24"', preco: 850.00, quantidade: 7 }
+];
+
+// Rota de status do servidor
 app.get('/api/status', (req, res) => {
     res.json({ 
         status: 'online', 
@@ -19,16 +26,44 @@ app.get('/api/status', (req, res) => {
     });
 });
 
-// Rota de exemplo que simula um erro para testar o middleware
-app.get('/api/erro-teste', (req, res, next) => {
+// Rota para listar todos os produtos
+app.get('/api/produtos', (req, res) => {
+    res.json({
+        sucesso: true,
+        total: produtos.length,
+        dados: produtos
+    });
+});
+
+// Rota para cadastrar um novo produto
+app.post('/api/produtos', (req, res, next) => {
     try {
-        throw new Error('Falha simulada propositalmente!');
+        const { nome, preco, quantidade } = req.body;
+
+        if (!nome || !preco || quantidade === undefined) {
+            throw new Error('Preencha todos os campos obrigatórios: nome, preco e quantidade.');
+        }
+
+        const novoProduto = {
+            id: produtos.length + 1,
+            nome,
+            preco: Number(preco),
+            quantidade: Number(quantidade)
+        };
+
+        produtos.push(novoProduto);
+
+        res.status(201).json({
+            sucesso: true,
+            mensagem: 'Produto cadastrado com sucesso!',
+            dados: novoProduto
+        });
     } catch (erro) {
-        next(erro); // Envia o erro para o middleware global
+        next(erro);
     }
 });
 
-// Middleware global de erro (fica sempre DEPOIS de todas as rotas)
+// Middleware global de erro (deve ficar SEMPRE depois de todas as rotas)
 app.use(errorMiddleware);
 
 // Iniciando o servidor
