@@ -4,6 +4,7 @@ import cors from 'cors';
 import { errorMiddleware } from './middlewares/errorMiddleware.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import pool from './config/db.js'; // Ajuste o caminho se necessário (ex: './db.js')
 
 // Configurações para obter o diretório atual (necessário para servir arquivos estáticos)
 const __filename = fileURLToPath(import.meta.url);
@@ -37,39 +38,33 @@ app.get('/api/status', (req, res) => {
 });
 
 // Rota para listar todos os produtos
-app.get('/api/produtos', (req, res) => {
-    res.json({
-        sucesso: true,
-        total: produtos.length,
-        dados: produtos
-    });
+app.get('/api/produtos', async (req, res) => {
+    try {
+        const [linhas] = await pool.query('SELECT * FROM produtos');
+        res.json({ dados: linhas }); // Mantido em formato compatível com o front-end
+    } catch (erro) {
+        console.error(erro);
+        res.status(500).json({ erro: 'Erro ao buscar produtos' });
+    }
 });
 
 // Rota para cadastrar um novo produto
-app.post('/api/produtos', (req, res, next) => {
+app.post('/api/produtos', async (req, res) => {
     try {
         const { nome, preco, quantidade } = req.body;
-
-        if (!nome || !preco || quantidade === undefined) {
-            throw new Error('Preencha todos os campos obrigatórios: nome, preco e quantidade.');
-        }
-
-        const novoProduto = {
-            id: produtos.length + 1,
-            nome,
-            preco: Number(preco),
-            quantidade: Number(quantidade)
-        };
-
-        produtos.push(novoProduto);
+        
+        const sql = 'INSERT INTO produtos (nome, preco, quantidade) VALUES (?, ?, ?)';
+        const [resultado] = await pool.query(sql, [nome, preco, quantidade]);
 
         res.status(201).json({
-            sucesso: true,
-            mensagem: 'Produto cadastrado com sucesso!',
-            dados: novoProduto
+            id: resultado.insertId,
+            nome,
+            preco,
+            quantidade
         });
     } catch (erro) {
-        next(erro);
+        console.error(erro);
+        res.status(500).json({ erro: 'Erro ao cadastrar produto' });
     }
 });
 
