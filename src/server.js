@@ -1,7 +1,13 @@
-// src/server.js
+// importações de módulos
 import express from 'express';
 import cors from 'cors';
 import { errorMiddleware } from './middlewares/errorMiddleware.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Configurações para obter o diretório atual (necessário para servir arquivos estáticos)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -9,6 +15,10 @@ const PORT = process.env.PORT || 3000;
 // Configurações básicas
 app.use(express.json());
 app.use(cors());
+
+// ... logo abaixo dos teus outros app.use():
+app.use(express.static(path.join(__dirname, '../public')));
+
 
 // Lista temporária em memória para simular a base de dados
 let produtos = [
