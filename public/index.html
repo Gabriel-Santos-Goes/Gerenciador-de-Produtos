@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaaS de Inventário</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; background-color: #f4f6f9; color: #333; }
+        h1, h2 { color: #2c3e50; }
+        .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        button { background-color: #3498db; color: white; border: none; font-weight: bold; cursor: pointer; }
+        button:hover { background-color: #2980b9; }
+        ul { list-style: none; padding: 0; }
+        li { background: #ecf0f1; margin-bottom: 8px; padding: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+    </style>
+</head>
+<body>
+
+    <h1>📦 Gestão de Inventário - SaaS</h1>
+
+    <!-- Formulário para Adicionar Produto -->
+    <div class="card">
+        <h2>Adicionar Novo Produto</h2>
+        <form id="productForm">
+            <input type="text" id="nome" placeholder="Nome do Produto" required>
+            <input type="number" id="preco" placeholder="Preço (€)" step="0.01" required>
+            <input type="number" id="quantidade" placeholder="Quantidade em Stock" required>
+            <button type="submit">Cadastrar Produto</button>
+        </form>
+    </div>
+
+    <!-- Lista de Produtos -->
+    <div class="card">
+        <h2>Produtos em Stock</h2>
+        <ul id="productList">
+            <!-- Os produtos vão aparecer aqui dinamicamente -->
+        </ul>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api/produtos';
+
+        // Função para carregar os produtos do servidor
+        async function carregarProdutos() {
+            try {
+                const response = await fetch(API_URL);
+                const resultado = await response.json();
+                
+                const lista = document.getElementById('productList');
+                lista.innerHTML = '';
+
+                resultado.dados.forEach(produto => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <span><strong>${produto.nome}</strong> - ${produto.quantidade} un.</span>
+                        <span>€ ${Number(produto.preco).toFixed(2)}</span>
+                    `;
+                    lista.appendChild(li);
+                });
+            } catch (erro) {
+                console.error('Erro ao carregar produtos:', erro);
+            }
+        }
+
+        // Evento para enviar o formulário via POST
+        document.getElementById('productForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const nome = document.getElementById('nome').value;
+            const preco = document.getElementById('preco').value;
+            const quantidade = document.getElementById('quantidade').value;
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome, preco, quantidade })
+                });
+
+                if (response.ok) {
+                    document.getElementById('productForm').reset();
+                    carregarProdutos(); // Atualiza a lista automaticamente
+                } else {
+                    alert('Erro ao cadastrar o produto.');
+                }
+            } catch (erro) {
+                console.error('Erro na requisição:', erro);
+            }
+        });
+
+        // Carrega os produtos assim que a página abre
+        carregarProdutos();
+    </script>
+</body>
+</html>
