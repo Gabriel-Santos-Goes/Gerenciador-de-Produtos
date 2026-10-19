@@ -60,6 +60,26 @@ app.post('/api/produtos', async (req, res) => {
     }
 });
 
+// Rota para atualizar um produto existente
+app.put('/api/produtos/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { nome, preco, quantidade } = req.body;
+
+        const sql = 'UPDATE produtos SET nome = ?, preco = ?, quantidade = ? WHERE id = ?';
+        const [resultado] = await pool.query(sql, [nome, preco, quantidade, id]);
+
+        if (resultado.affectedRows === 0) {
+            return res.status(404).json({ erro: 'Produto não encontrado' });
+        }
+
+        res.json({ mensagem: 'Produto atualizado com sucesso!' });
+    } catch (erro) {
+        console.error(erro);
+        res.status(500).json({ erro: 'Erro ao atualizar produto' });
+    }
+});
+
 // Rota para deletar um produto pelo ID
 app.delete('/api/produtos/:id', async (req, res) => {
     try {
