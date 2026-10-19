@@ -20,14 +20,6 @@ app.use(cors());
 // ... logo abaixo dos teus outros app.use():
 app.use(express.static(path.join(__dirname, '../public')));
 
-
-// Lista temporária em memória para simular a base de dados
-let produtos = [
-    { id: 1, nome: 'Teclado Mecânico', preco: 250.00, quantidade: 15 },
-    { id: 2, nome: 'Mouse Gamer', preco: 120.00, quantidade: 30 },
-    { id: 3, nome: 'Monitor 24"', preco: 850.00, quantidade: 7 }
-];
-
 // Rota de status do servidor
 app.get('/api/status', (req, res) => {
     res.json({ 
@@ -65,6 +57,26 @@ app.post('/api/produtos', async (req, res) => {
     } catch (erro) {
         console.error(erro);
         res.status(500).json({ erro: 'Erro ao cadastrar produto' });
+    }
+});
+
+// Rota para deletar um produto pelo ID
+app.delete('/api/produtos/:id', async (req, res) => {
+    try {
+        const { id } = req.params; // Pega o ID que vem na URL
+
+        const sql = 'DELETE FROM produtos WHERE id = ?';
+        const [resultado] = await pool.query(sql, [id]);
+
+        // Verifica se realmente encontrou e apagou algum produto com esse ID
+        if (resultado.affectedRows === 0) {
+            return res.status(404).json({ erro: 'Produto não encontrado' });
+        }
+
+        res.json({ mensagem: 'Produto deletado com sucesso!' });
+    } catch (erro) {
+        console.error(erro);
+        res.status(500).json({ erro: 'Erro ao deletar produto' });
     }
 });
 
