@@ -13,6 +13,12 @@
         button:hover { background-color: #2980b9; }
         ul { list-style: none; padding: 0; }
         li { background: #ecf0f1; margin-bottom: 8px; padding: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+        /* Estilo moderno para o botão de apagar */
+        .btn-delete {background-color: #ff4757;color: white;border: none;padding: 6px 12px;border-radius: 4px;cursor: pointer;font-weight: bold;transition: background-color 0.2s ease, transform 0.1s ease;width: auto;margin: 0;display: inline-flex;align-items: center;gap: 5px;}
+
+        .btn-delete:hover { background-color: #e84118; }
+
+        .btn-delete:active { transform: scale(0.95); /* Dá um efeito leve de clique */}
     </style>
 </head>
 <body>
@@ -42,6 +48,7 @@
         const API_URL = 'http://localhost:3000/api/produtos';
 
         // Função para carregar os produtos do servidor
+        // Função para carregar os produtos do servidor
         async function carregarProdutos() {
             try {
                 const response = await fetch(API_URL);
@@ -53,13 +60,34 @@
                 resultado.dados.forEach(produto => {
                     const li = document.createElement('li');
                     li.innerHTML = `
-                        <span><strong>${produto.nome}</strong> - ${produto.quantidade} un.</span>
-                        <span>€ ${Number(produto.preco).toFixed(2)}</span>
+                        <span><strong>${produto.nome}</strong> - ${produto.quantidade} un. (€ ${Number(produto.preco).toFixed(2)})</span>
+                        <button onclick="deletarProduto(${produto.id})" style="background-color: #e74c3c; width: auto; padding: 5px 10px; margin: 0;">Apagar</button>
                     `;
                     lista.appendChild(li);
                 });
             } catch (erro) {
                 console.error('Erro ao carregar produtos:', erro);
+            }
+        }
+
+        // Nova função para deletar o produto via API
+        async function deletarProduto(id) {
+            if (!confirm('Tens a certeza que pretendes apagar este produto?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    carregarProdutos(); // Atualiza a lista automaticamente após apagar
+                } else {
+                    alert('Erro ao apagar o produto.');
+                }
+            } catch (erro) {
+                console.error('Erro na requisição de exclusão:', erro);
             }
         }
 
